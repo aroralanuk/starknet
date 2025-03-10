@@ -146,7 +146,7 @@ pub mod GasRouterComponent {
         fn _Gas_router_hook_metadata(
             self: @ComponentState<TContractState>, destination: u32
         ) -> Bytes {
-            StandardHookMetadata::override_gas_limits(self.destination_gas.read(destination))
+            StandardHookMetadata::override_gas_limits(0)
         }
 
         fn _set_destination_gas(ref self: ComponentState<TContractState>, domain: u32, gas: u256) {
