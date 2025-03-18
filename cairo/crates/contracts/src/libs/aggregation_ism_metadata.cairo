@@ -138,8 +138,8 @@ mod test {
             ]
         );
         let mut expected_result = array![
-            0x071E1B5E54086BBDE2B7A131A2C913F4_u256, 
-            0x42485974C32DF56EE47F9456B3270DAE_u256, 
+            0x071E1B5E54086BBDE2B7A131A2C913F4_u256,
+            0x42485974C32DF56EE47F9456B3270DAE_u256,
             0xbe22faba5bc0223a7e3077adcd04391f_u256,
             0x2ccdd2b2ad2eac2d71c3f04755d5d95d_u256,
             0x000000015dcbf07fa1898b0d8b64991f_u256,
@@ -149,7 +149,7 @@ mod test {
             0x9190d11a1c_u256,
         ];
         // range = Result::Ok((8, 141))
-    
+
         let result = AggregationIsmMetadata::metadata_at(encoded_metadata.clone(), 0);
 
         let mut cur_idx = 0;
@@ -157,9 +157,21 @@ mod test {
             if (cur_idx == 9) {
                 break ();
             }
-            println!("result: {:?}", *BytesTrait::data(result.clone())[cur_idx]);
+            let result = AggregationIsmMetadata::metadata_at(encoded_metadata.clone(), cur_idx);
+            assert(
+                *BytesTrait::data(result.clone())[0] == *expected_result.at(cur_idx.into()).low,
+                'Agg metadata extract failed'
+            );
             cur_idx += 1;
-        }
+        };
+    // let mut cur_idx = 0;
+    // loop {
+    //     if (cur_idx == 9) {
+    //         break ();
+    //     }
+    //     println!("result: {:?}", *BytesTrait::data(result.clone())[cur_idx]);
+    //     cur_idx += 1;
+    // }
     }
 
 
