@@ -152,8 +152,13 @@ mod test {
     
         let result = AggregationIsmMetadata::metadata_at(encoded_metadata.clone(), 0);
 
-        for i in 0..9 {
-            println!("result: {:?}", *BytesTrait::data(result.clone())[i]);
+        let mut cur_idx = 0;
+        loop {
+            if (cur_idx == 9) {
+                break ();
+            }
+            println!("result: {:?}", *BytesTrait::data(result.clone())[cur_idx]);
+            cur_idx += 1;
         }
     }
 
