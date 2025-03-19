@@ -34,15 +34,12 @@ pub mod aggregation_ism_metadata {
             };
             let mut bytes_array = BytesTrait::new(496, array![]);
             loop {
-                println!("start: {:?}", start);
-                println!("end: {:?}", end);
                 if ((end - start) <= BYTES_PER_ELEMENT.into()) {
                     let (_, res) = _metadata.read_u128_packed(start, end - start);
                     bytes_array.append_u128(res);
                     break ();
                 }
                 let (_, res) = _metadata.read_u128_packed(start, BYTES_PER_ELEMENT.into());
-                println!("INTER res: {:?}", res);
                 bytes_array.append_u128(res);
                 start = start + BYTES_PER_ELEMENT.into()
             };
@@ -123,6 +120,7 @@ mod test {
 
     #[test]
     fn test_metadata_not_padded() {
+        // 141 bytes of metadata, not padded to mod 16 = 0
         let encoded_metadata = BytesTrait::new(
             141,
             array![
@@ -145,11 +143,11 @@ mod test {
             0x000000015dcbf07fa1898b0d8b64991f_u256,
             0x099e8478268fb36e0e5fe7832aa345da_u256,
             0x8B8888645622786D53D898C95D75D37A_u256,
-            0x582de78deda234977d806349eac6653e_u256,
-            0x9190d11a1c_u256,
+            0x582de78deda234977 d806349eac6653e_u256, // 0x582DE78DEDA23497 0000007D806349EA_u256
+            0x9190d11a1c_u256, // 0xC6653E9190
         ];
         // range = Result::Ok((8, 141))
-
+        // return should be 141 - 8 = 133 bytes
         let result = AggregationIsmMetadata::metadata_at(encoded_metadata.clone(), 0);
 
         let mut cur_idx = 0;
@@ -157,21 +155,13 @@ mod test {
             if (cur_idx == 9) {
                 break ();
             }
-            let result = AggregationIsmMetadata::metadata_at(encoded_metadata.clone(), cur_idx);
+            println!("result: {:?}", *BytesTrait::data(result.clone())[cur_idx]);
             assert(
-                *BytesTrait::data(result.clone())[0] == *expected_result.at(cur_idx.into()).low,
-                'Agg metadata extract failed'
+                *BytesTrait::data(result.clone())[cur_idx] == *expected_result.at(cur_idx.into()).low,
+                'Agg metadata mismatch'
             );
             cur_idx += 1;
         };
-    // let mut cur_idx = 0;
-    // loop {
-    //     if (cur_idx == 9) {
-    //         break ();
-    //     }
-    //     println!("result: {:?}", *BytesTrait::data(result.clone())[cur_idx]);
-    //     cur_idx += 1;
-    // }
     }
 
 
