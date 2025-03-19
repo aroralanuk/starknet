@@ -34,7 +34,7 @@ pub mod aggregation_ism_metadata {
             };
             let mut bytes_array = BytesTrait::new(496, array![]);
             loop {
-                if ((end - start) <= 16) {
+                if ((end - start) <= BYTES_PER_ELEMENT.into()) {
                     let (_, res) = _metadata.read_u128_packed(start, end - start);
                     bytes_array.append_u128(res);
                     break ();
@@ -117,6 +117,55 @@ mod test {
             cur_idx += 1;
         };
     }
+
+    #[test]
+    fn test_metadata_not_padded() {
+        // 141 bytes of metadata, not padded to mod 16 = 0
+        let encoded_metadata = BytesTrait::new(
+            141,
+            array![
+                0x000000080000008d071e1b5e54086bbd,
+                0xe2b7a131a2c913f442485974c32df56e,
+                0xe47f9456b3270daebe22faba5bc0223a,
+                0x7e3077adcd04391f2ccdd2b2ad2eac2d,
+                0x71c3f04755d5d95d000000015dcbf07f,
+                0xa1898b0d8b64991f099e8478268fb36e,
+                0x0e5fe7832aa345da8b8888645622786d,
+                0x53d898c95d75d37a582de78deda23497,
+                0x7d806349eac6653e9190d11a1c,
+            ]
+        );
+        let mut expected_result = array![
+            0x071E1B5E54086BBDE2B7A131A2C913F4_u256,
+            0x42485974C32DF56EE47F9456B3270DAE_u256,
+            0xbe22faba5bc0223a7e3077adcd04391f_u256,
+            0x2ccdd2b2ad2eac2d71c3f04755d5d95d_u256,
+            0x000000015dcbf07fa1898b0d8b64991f_u256,
+            0x099e8478268fb36e0e5fe7832aa345da_u256,
+            0x8B8888645622786D53D898C95D75D37A_u256,
+            0x582de78deda234977d806349eac6653e_u256, // 0x582DE78DEDA23497 0000007D806349EA_u256
+            0x9190d11a1c_u256, // 0xC6653E9190
+        ];
+        // range = Result::Ok((8, 141))
+        // return should be 141 - 8 = 133 bytes
+        let result = AggregationIsmMetadata::metadata_at(encoded_metadata.clone(), 0);
+
+        let mut cur_idx = 0;
+        loop {
+            if (cur_idx == 9) {
+                break ();
+            }
+            println!("result: {:?}", *BytesTrait::data(result.clone())[cur_idx]);
+            assert(
+                *BytesTrait::data(result.clone())[cur_idx] == *expected_result
+                    .at(cur_idx.into())
+                    .low,
+                'Agg metadata mismatch'
+            );
+            cur_idx += 1;
+        };
+    }
+
 
     #[test]
     fn test_aggregation_ism_has_metadata() {
